@@ -1,8 +1,8 @@
 const trainDeVie = require("./TrainDeVie.js");
 const salaire = require("./Salaire.js");
 
-const TrainDeVie = new trainDeVie(20_000, "tsy aiko");
-const Salaire = new salaire(80_000, "26/07/2024");
+const TrainDeVie = new trainDeVie(20_000, "...");
+const Salaire = new salaire(80_000, "18/12/2026");
 
 let spentMoney = [];
 let i = 0;
