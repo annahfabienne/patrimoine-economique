@@ -1,19 +1,19 @@
-// Possession.jsx
+
 
 import { useEffect, useState } from 'react';
 import "bootstrap/dist/css/bootstrap.min.css";
-import PossessionModel from '../../../../models/possessions/Possession.js'; // Import renommer pour éviter le conflit
-import Flux from '../../../../models/possessions/Flux.js'; // Chemin inchangé
+import PossessionModel from '../../../../models/possessions/Possession.js'; 
+import Flux from '../../../../models/possessions/Flux.js'; 
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // Importer useNavigate pour la redirection
+import { useNavigate } from 'react-router-dom'; 
 
-function Possession() { // Nom du composant
+function Possession() { 
   const [possessions, setPossessions] = useState([]);
   const [arrayResult, setArrayResult] = useState([]);
   const [patrimoineValue, setPatrimoineValue] = useState(0);
   const [datePicker, setDatePicker] = useState('');
-  const [editIndex, setEditIndex] = useState(null); // Pour suivre la ligne en mode édition
-  const [editValues, setEditValues] = useState({}); // Pour stocker les valeurs éditées
+  const [editIndex, setEditIndex] = useState(null); 
+  const [editValues, setEditValues] = useState({}); 
 
   const navigate = useNavigate(); // Créer une instance de useNavigate
 
@@ -103,7 +103,7 @@ function Possession() { // Nom du composant
       libelle: possessions[index].libelle,
       valeur: possessions[index].valeur,
       tauxAmortissement: possessions[index].tauxAmortissement,
-      dateDebut: possessions[index].dateDebut.toISOString().split('T')[0], // Ajouter ici pour date de début
+      dateDebut: possessions[index].dateDebut.toISOString().split('T')[0], 
     });
   }
 
@@ -114,7 +114,7 @@ function Possession() { // Nom du composant
       libelle: editValues.libelle,
       valeur: editValues.valeur,
       tauxAmortissement: editValues.tauxAmortissement,
-      dateDebut: new Date(editValues.dateDebut), // Mise à jour de la date de début
+      dateDebut: new Date(editValues.dateDebut), 
     };
     setPossessions(updatedPossessions);
     setEditIndex(null);
@@ -133,11 +133,11 @@ function Possession() { // Nom du composant
   // Fonction pour ajouter une nouvelle possession
   function handleAddPossession() {
     const newPossession = new PossessionModel(
-      "Nouveau Possesseur", // Valeur par défaut, tu peux la changer
-      "Nouveau Libellé", // Valeur par défaut, tu peux la changer
-      0, // Valeur par défaut
-      new Date(), // Date de début par défaut
-      null, // Pas de date de fin par défaut
+      "Nouveau Possesseur",
+      "Nouveau Libellé",
+      0, 
+      new Date(), 
+      null, 
       0 // Taux d'amortissement par défaut
     );
     setPossessions([...possessions, newPossession]);
@@ -170,7 +170,7 @@ function Possession() { // Nom du composant
                 <td>
                   <input
                     type="date"
-                    value={editValues.dateDebut} // Champ de saisie pour date de début
+                    value={editValues.dateDebut} 
                     onChange={(e) => handleChange(e, 'dateDebut')}
                   />
                 </td>

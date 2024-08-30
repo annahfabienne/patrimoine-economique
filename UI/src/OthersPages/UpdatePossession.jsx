@@ -1,11 +1,11 @@
-// UpdatePossession.jsx
+
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from 'axios';
-import Possession from '../../../../models/possessions/Possession.js'; // Import renommer pour éviter le conflit
-import Flux from '../../../../models/possessions/Flux.js'; // Chemin inchangé
+import Possession from '../../../../models/possessions/Possession.js'; 
+import Flux from '../../../../models/possessions/Flux.js'; 
 
 function UpdatePossession({ mode, initialData, onSave }) {
   const [libelle, setLibelle] = useState('');
@@ -14,7 +14,7 @@ function UpdatePossession({ mode, initialData, onSave }) {
   const [tauxAmortissement, setTauxAmortissement] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { id } = useParams(); // Pour obtenir l'identifiant de la possession si nécessaire
+  const { id } = useParams(); // Pour obtenir l'identifiant de la possession 
 
   useEffect(() => {
     if (mode === 'edit' && initialData) {
@@ -44,7 +44,7 @@ function UpdatePossession({ mode, initialData, onSave }) {
         // Mettre à jour la possession existante
         await axios.put(`/api/possessions/${id}`, newPossession);
       }
-      onSave(); // Callback pour mettre à jour la liste des possessions dans le composant parent
+      onSave(); 
       navigate('/');
     } catch (error) {
       console.error('Error saving possession:', error);

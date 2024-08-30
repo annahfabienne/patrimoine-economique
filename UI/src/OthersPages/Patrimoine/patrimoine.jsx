@@ -13,9 +13,9 @@ function Patrimoine() {
 
     // Exemple de données statiques pour les tests
     useEffect(() => {
-        // Remplacer cette section par une vraie requête si nécessaire
+        
         const fetchData = async () => {
-            // Exemple de données pour tester
+            
             const mockData = [
                 { dateDebut: '2024-01-01', valeur: 100 },
                 { dateDebut: '2024-02-01', valeur: 150 },
