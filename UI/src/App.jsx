@@ -2,16 +2,25 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import './App.css';
 import  {BrowserRouter as Router, Routes, Route, Link} from 'react-router-dom';
-import PatrimoinePage from './OthersPages/Patrimoine/patrimoine.jsx';//PROBLEME DE CHEMIN D'ACCES
+import PatrimoinePage from './OthersPages/Patrimoine/Patrimoine.jsx';//PROBLEME DE CHEMIN D'ACCES
 import PossessionPage from './OthersPages/Possession/possession.jsx';
+import NewPossession from './OthersPages/NewPossession.jsx';
 
 function App(){
   return(
   <Router>
-      <Header />
+    <nav>
+          <button><Link to="/Patrimoine">Patrimoine</Link></button>
+         
+        </nav>
+      <nav>
+        <button> <Link to="/">Possession</Link></button>
+        </nav>
       <Routes>
+        
         <Route path="/" element={<PossessionPage />} />
-        <Route path="/PatrimoinePage" element={<PatrimoinePage />} />
+        <Route path="/Patrimoine" element={<PatrimoinePage />} />
+        <Route path="/NewPossession" element={<NewPossession />} />
       </Routes>
     </Router>
   );
