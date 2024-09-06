@@ -1,127 +1,176 @@
 import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement } from 'chart.js';
+import axios from 'axios';
+import Possession from '../../../../models/possessions/Possession.js';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement);
 
 function Patrimoine() {
-    const [data, setData] = useState([]);
-    const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
-    const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
-    const [chartData, setChartData] = useState({ labels: [], datasets: [] });
-    const [patrimoineValue, setPatrimoineValue] = useState(null);
+  const [possessions, setPossessions] = useState([]);
+  const [chartData, setChartData] = useState({ labels: [], datasets: [] });
+  const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const [selectedDay, setSelectedDay] = useState(1);
+  const [specificDate, setSpecificDate] = useState('');
+  const [patrimoineAtDate, setPatrimoineAtDate] = useState(null);
 
-    
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await fetch('http://localhost:3500/api/possession');
-                const mockData = await response.json();
-                setData(mockData.data[1].data.possessions); 
-            } catch (error) {
-                console.error('Fetching data failed:', error);
-            }
-        };
-        fetchData();
-    }, []);
+  // Charger les possessions depuis le fichier JSON
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get('/data.json');
+        const data = response.data;
 
-    const updateChartData = (data, startDate, endDate) => {
-        const filteredData = data.filter(possession =>
-            new Date(possession.dateDebut) <= new Date(endDate) &&
-            (!possession.dateFin || new Date(possession.dateFin) >= new Date(startDate))
-        );
-
-        const labels = filteredData.map(p => new Date(p.dateDebut).toLocaleDateString());
-        const values = filteredData.map(p => p.valeur);
-
-        setChartData({
-            labels,
-            datasets: [
-                {
-                    label: 'Valeur du patrimoine',
-                    data: values,
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    borderWidth: 2,
-                    fill: true,
-                },
-            ],
-        });
+        if (data && data[1] && Array.isArray(data[1].data.possessions)) {
+          const instancedPossessions = instancing(data[1].data.possessions);
+          setPossessions(instancedPossessions);
+        } else {
+          console.error('Problème avec le format des données :', data);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des données :', error);
+      }
     };
 
-    const handleStartDateChange = (event) => {
-        setStartDate(event.target.value);
+    fetchData();
+  }, []);
+
+  // Instancier les objets Possession depuis les données
+  const instancing = (possessionsData) => {
+    return possessionsData.map((oneData) => {
+      return new Possession(
+        oneData.possesseur.nom,
+        oneData.libelle,
+        oneData.valeur,
+        new Date(oneData.dateDebut),
+        oneData.dateFin,
+        oneData.tauxAmortissement || 0
+      );
+    });
+  };
+
+  // Calculer les valeurs du patrimoine en fonction des dates
+  const calculatePatrimoineValues = () => {
+    if (!dateRange.start || !dateRange.end) {
+      alert('Veuillez sélectionner les dates de début et de fin.');
+      return;
+    }
+
+    const startDate = new Date(dateRange.start);
+    const endDate = new Date(dateRange.end);
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      alert('Sélection de date invalide. Veuillez choisir des dates valides.');
+      return;
+    }
+
+    const yearToMonth = (endDate.getFullYear() - startDate.getFullYear()) * 12;
+    const months = endDate.getMonth() - startDate.getMonth();
+    const totalMonths = months + yearToMonth;
+
+    let resultsArray = [];
+    const addMonths = (date, monthsToAdd) => {
+      const resultDate = new Date(date);
+      resultDate.setMonth(resultDate.getMonth() + monthsToAdd);
+      return resultDate;
     };
 
-    const handleEndDateChange = (event) => {
-        setEndDate(event.target.value);
-    };
+    for (let i = 0; i <= totalMonths; i++) {
+      const currentDate = addMonths(new Date(startDate.getFullYear(), startDate.getMonth(), selectedDay), i);
 
-    const handleCheckValue = () => {
-        updateChartData(data, startDate, endDate);
+      const patrimoineValue = possessions.reduce((acc, possession) => {
+        const valeurApresAmortissement = possession.getValeur(currentDate);
+        return acc + valeurApresAmortissement;
+      }, 0);
 
-        // Calculer et mettre à jour la valeur totale
-        const filteredData = data.filter(possession =>
-            new Date(possession.dateDebut) <= new Date(endDate) &&
-            (!possession.dateFin || new Date(possession.dateFin) >= new Date(startDate))
-        );
+      resultsArray.push({ date: currentDate, value: patrimoineValue });
+    }
 
-        const totalValue = filteredData.reduce((total, possession) => total + possession.valeur, 0);
-        setPatrimoineValue(totalValue);
-    };
+    if (resultsArray.length > 0) {
+      const labels = resultsArray.map((item) => item.date.toLocaleDateString());
+      const dataValues = resultsArray.map((item) => item.value);
 
-    return (
-        <div style={{ position: 'relative', minHeight: '100vh', paddingBottom: '100px' }}>
-            <h1>Patrimoine de HEI</h1>
-            <div style={{ width: '80%', margin: '0 auto' }}>
-                <Line data={chartData} options={{
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        },
-                        tooltip: {
-                            enabled: true,
-                        },
-                    },
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Date de début',
-                            },
-                        },
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Valeur',
-                            },
-                            beginAtZero: true,
-                        },
-                    },
-                }} />
-            </div>
-            {patrimoineValue !== null && (
-                <div style={{ marginTop: '20px' }}>
-                    <h2>Valeur du patrimoine entre {new Date(startDate).toLocaleDateString()} et {new Date(endDate).toLocaleDateString()} :</h2>
-                    <p>{patrimoineValue} </p>
-                </div>
-            )}
-            <div style={{ position: 'absolute', bottom: '20px', width: '80%', margin: '0 auto', textAlign: 'center' }}>
-                <input
-                    type="date"
-                    value={startDate}
-                    onChange={handleStartDateChange}
-                />
-                <input
-                    type="date"
-                    value={endDate}
-                    onChange={handleEndDateChange}
-                />
-                <button onClick={handleCheckValue} style={{ marginLeft: '10px' }}>Valider</button>
-            </div>
-        </div>
-    );
+      setChartData({
+        labels: labels,
+        datasets: [
+          {
+            label: 'Valeur du Patrimoine',
+            data: dataValues,
+            borderColor: 'rgba(75,192,192,1)',
+            backgroundColor: 'rgba(75,192,192,0.2)',
+            fill: true,
+            tension: 0.4,
+          },
+        ],
+      });
+    } else {
+      setChartData({ labels: [], datasets: [] });
+    }
+  };
+
+  // Calculer la valeur du patrimoine à une date donnée
+  const calculatePatrimoineAtDate = () => {
+    if (!specificDate) {
+      alert('Veuillez sélectionner une date.');
+      return;
+    }
+
+    const date = new Date(specificDate);
+    if (isNaN(date.getTime())) {
+      alert('Date invalide. Veuillez choisir une date valide.');
+      return;
+    }
+
+    const patrimoineValue = possessions.reduce((acc, possession) => {
+      const valeurApresAmortissement = possession.getValeur(date);
+      return acc + valeurApresAmortissement;
+    }, 0);
+
+    setPatrimoineAtDate(patrimoineValue);
+  };
+
+  return (
+    <div>
+      <h2>Évolution du Patrimoine</h2>
+      <input
+        type="date"
+        value={dateRange.start}
+        onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+      />
+      <input
+        type="date"
+        value={dateRange.end}
+        onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+      />
+      <input
+        type="number"
+        value={selectedDay}
+        min={1}
+        max={31}
+        onChange={(e) => setSelectedDay(parseInt(e.target.value))}
+      />
+      <button onClick={calculatePatrimoineValues}>Calculer</button>
+
+      {chartData.labels.length > 0 ? (
+        <Line data={chartData} />
+      ) : (
+        <p>Aucune donnée à afficher. Veuillez ajuster les paramètres et appuyer sur "Calculer".</p>
+      )}
+
+      <div>
+        <h3>Calculer la valeur du patrimoine à une date donnée</h3>
+        <input
+          type="date"
+          value={specificDate}
+          onChange={(e) => setSpecificDate(e.target.value)}
+        />
+        <button onClick={calculatePatrimoineAtDate}>Calculer</button>
+        {patrimoineAtDate !== null && (
+          <p>Valeur du patrimoine à la date sélectionnée : {patrimoineAtDate.toFixed(2)}MDG</p>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default Patrimoine;

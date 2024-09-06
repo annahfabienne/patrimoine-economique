@@ -65,22 +65,11 @@ function Possessions() {
 
     console.log('New possessions:', newPossessions);
     setPossessions(newPossessions);
-
-    // Recalculer la valeur du patrimoine à l'initialisation
-    if (datePicker) {
-      const date = new Date(datePicker);
-      calculatePatrimoineValue(date);
-    }
   }
 
   function getDatePicker(e) {
     setDatePicker(e.target.value);
     console.log('Selected date:', e.target.value);
-    // Recalculer la valeur du patrimoine à chaque fois que la date est sélectionnée
-    if (e.target.value) {
-      const date = new Date(e.target.value);
-      calculatePatrimoineValue(date);
-    }
   }
 
   function calculatePatrimoineValue(date) {
@@ -133,16 +122,13 @@ function Possessions() {
       parseFloat(editValues.valeur),
       new Date(editValues.dateDebut),
       updatedPossessions[index].dateFin,
-      parseFloat(editValues.tauxAmortissement)
+      parseFloat(editValues.tauxAmortissement),
+      updatedPossessions[index].jour,
+      updatedPossessions[index].valeurConstante
     );
     setPossessions(updatedPossessions);
     setEditIndex(null);
 
-    // Recalcule la valeur du patrimoine après mise à jour
-    if (datePicker) {
-      const date = new Date(datePicker);
-      calculatePatrimoineValue(date);
-    }
     console.log('Possessions after save:', updatedPossessions);
   }
 
@@ -155,11 +141,6 @@ function Possessions() {
     const updatedPossessions = [...possessions];
     updatedPossessions[index].dateFin = new Date();
     setPossessions(updatedPossessions);
-    // Recalcule la valeur du patrimoine après fermeture
-    if (datePicker) {
-      const date = new Date(datePicker);
-      calculatePatrimoineValue(date);
-    }
     console.log('Possessions after close:', updatedPossessions);
   }
 
@@ -173,11 +154,6 @@ function Possessions() {
       0 
     );
     setPossessions([...possessions, newPossession]);
-    // Recalcule la valeur du patrimoine après ajout
-    if (datePicker) {
-      const date = new Date(datePicker);
-      calculatePatrimoineValue(date);
-    }
     console.log('Possessions after add:', [...possessions, newPossession]);
   }
 
@@ -191,22 +167,29 @@ function Possessions() {
                 <td>
                   <input
                     type="text"
-                    value={possession.libelle}
+                    value={editValues.libelle || ''}
                     onChange={(e) => handleChange(e, 'libelle')}
                   />
                 </td>
                 <td>
                   <input
                     type="number"
-                    value={possession.valeurConstante ? possession.valeurConstante : possession.valeur}
+                    value={editValues.valeur || ''}
                     onChange={(e) => handleChange(e, 'valeur')}
                   />
                 </td>
                 <td>
                   <input
                     type="date"
-                    value={possession.dateDebut} 
+                    value={editValues.dateDebut || ''}
                     onChange={(e) => handleChange(e, 'dateDebut')}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="number"
+                    value={editValues.tauxAmortissement || ''}
+                    onChange={(e) => handleChange(e, 'tauxAmortissement')}
                   />
                 </td>
               </>
@@ -214,24 +197,12 @@ function Possessions() {
               <>
                 <td>{possession.libelle}</td>
                 <td>{possession.valeurConstante ? possession.valeurConstante : possession.valeur}</td>
-                
-
                 <td>{possession.dateDebut.toDateString()}</td>
+                <td>{possession.dateFin ? possession.dateFin.toDateString() : 'inconnue(s)'}</td>
+                <td>{possession.tauxAmortissement}</td>
+                <td>{arrayResult[i] !== undefined ? arrayResult[i] : 'N/A'}</td>
               </>
             )}
-            <td>{possession.dateFin ? possession.dateFin.toDateString() : 'inconnue(s)'}</td>
-            {editIndex === i ? (
-              <td>
-                <input
-                  type="text"
-                  value={editValues.tauxAmortissement}
-                  onChange={(e) => handleChange(e, 'tauxAmortissement')}
-                />
-              </td>
-            ) : (
-              <td>{possession.tauxAmortissement}</td>
-            )}
-            <td>{arrayResult[i] !== undefined ? arrayResult[i] : 'N/A'}</td>
             <td>
               {editIndex === i ? (
                 <button
@@ -282,31 +253,31 @@ function Possessions() {
             <tr>
               <th scope="header">Libelle</th>
               <th scope="header">Valeur Libellé</th>
-              <th scope="header">Date de début</th>
-              <th scope="header">Date de fin</th>
+              <th scope="header">Date de Début</th>
+              <th scope="header">Date de Fin</th>
               <th scope="header">Amortissement</th>
-              <th scope="header">Valeur actuelle</th>
-              <th scope="header">Action</th>
+              <th scope="header">Valeur Actuelle</th>
+              <th scope="header">Actions</th>
             </tr>
           </thead>
           <ShowList possessions={possessions} arrayResult={arrayResult} />
         </table>
+        <div className="text-center mt-4">
+          <input
+            type="date"
+            value={datePicker}
+            onChange={getDatePicker}
+          />
+          <button
+            type="button"
+            className="btn btn-primary mx-2"
+            onClick={getNewValue}
+          >
+            calcul Patrimoine
+          </button>
+          <p className="mt-2">Valeur Totale du Patrimoine: {patrimoineValue.toFixed(2)}MDG</p>
+        </div>
       </main>
-      <footer className="text-center py-3 border-top">
-        <input
-          type="date"
-          value={datePicker}
-          onChange={getDatePicker}
-        />
-        <button
-          type="button"
-          className="btn btn-primary ms-2"
-          onClick={getNewValue}
-        >
-          Recalculate Patrimoine
-        </button>
-        <p>Valeur totale du patrimoine: {patrimoineValue.toFixed(2)}</p>
-      </footer>
     </div>
   );
 }
