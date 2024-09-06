@@ -11,17 +11,16 @@ function Patrimoine() {
     const [chartData, setChartData] = useState({ labels: [], datasets: [] });
     const [patrimoineValue, setPatrimoineValue] = useState(null);
 
-    // Exemple de données statiques pour les tests
+    
     useEffect(() => {
-        
         const fetchData = async () => {
-            
-            const mockData = [
-                { dateDebut: '2024-01-01', valeur: 100 },
-                { dateDebut: '2024-02-01', valeur: 150 },
-                { dateDebut: '2024-03-01', valeur: 200 }
-            ];
-            setData(mockData);
+            try {
+                const response = await fetch('http://localhost:3500/api/possession');
+                const mockData = await response.json();
+                setData(mockData.data[1].data.possessions); 
+            } catch (error) {
+                console.error('Fetching data failed:', error);
+            }
         };
         fetchData();
     }, []);
@@ -59,7 +58,6 @@ function Patrimoine() {
     };
 
     const handleCheckValue = () => {
-        
         updateChartData(data, startDate, endDate);
 
         // Calculer et mettre à jour la valeur totale

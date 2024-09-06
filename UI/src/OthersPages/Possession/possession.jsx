@@ -1,13 +1,11 @@
-
-
 import { useEffect, useState } from 'react';
 import "bootstrap/dist/css/bootstrap.min.css";
-import PossessionModel from '../../../../models/possessions/Possession.js'; 
+import Possession from '../../../../models/possessions/Possession.js'; 
 import Flux from '../../../../models/possessions/Flux.js'; 
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom'; 
 
-function Possession() { 
+function Possessions() { 
   const [possessions, setPossessions] = useState([]);
   const [arrayResult, setArrayResult] = useState([]);
   const [patrimoineValue, setPatrimoineValue] = useState(0);
@@ -15,12 +13,12 @@ function Possession() {
   const [editIndex, setEditIndex] = useState(null); 
   const [editValues, setEditValues] = useState({}); 
 
-  const navigate = useNavigate(); // Créer une instance de useNavigate
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('/data.json'); // Utilisation d'axios pour la requête
+        const response = await axios.get('/data.json');
         const data = response.data;
         console.log('Data loaded:', data);
 
@@ -40,7 +38,7 @@ function Possession() {
   function instancing(possessionsData) {
     console.log('Possessions data:', possessionsData);
 
-    const newPossessions = possessionsData.map((oneData) => {
+    const newPossessions = possessionsData.map((oneData, index) => {
       if (oneData.libelle === "Alternance" || oneData.libelle === "Survie") {
         return new Flux(
           oneData.possesseur.nom,
@@ -50,25 +48,62 @@ function Possession() {
           oneData.dateFin,
           oneData.tauxAmortissement || "0",
           oneData.jour,
-          oneData.valeurConstante
+          oneData.valeurConstante,
+          index
         );
       }
-      return new PossessionModel(
+      return new Possession(
         oneData.possesseur.nom,
         oneData.libelle,
         oneData.valeur,
         new Date(oneData.dateDebut),
         oneData.dateFin,
-        oneData.tauxAmortissement || 0
+        oneData.tauxAmortissement || 0,
+        index
       );
     });
+
     console.log('New possessions:', newPossessions);
     setPossessions(newPossessions);
+
+    // Recalculer la valeur du patrimoine à l'initialisation
+    if (datePicker) {
+      const date = new Date(datePicker);
+      calculatePatrimoineValue(date);
+    }
   }
 
   function getDatePicker(e) {
     setDatePicker(e.target.value);
     console.log('Selected date:', e.target.value);
+    // Recalculer la valeur du patrimoine à chaque fois que la date est sélectionnée
+    if (e.target.value) {
+      const date = new Date(e.target.value);
+      calculatePatrimoineValue(date);
+    }
+  }
+
+  function calculatePatrimoineValue(date) {
+    const updatedArrayResult = possessions.map((possession) => {
+      if (possession instanceof Possession && typeof possession.getValeurApresAmortissement === 'function') {
+        const value = possession.getValeurApresAmortissement(date);
+        console.log(`Value for ${possession.libelle}:`, value);
+        return value;
+      } else {
+        console.error('Possession does not have getValeurApresAmortissement:', possession);
+        return 0; 
+      }
+    });
+
+    const results = updatedArrayResult.reduce(
+      (previousValue, currentValue) => previousValue + currentValue,
+      0
+    );
+
+    console.log('Updated arrayResult:', updatedArrayResult);
+    console.log('Calculated patrimoine value:', results);
+    setPatrimoineValue(results);
+    setArrayResult(updatedArrayResult);
   }
 
   function getNewValue() {
@@ -77,24 +112,7 @@ function Possession() {
       return;
     }
     const date = new Date(datePicker);
-
-    const values = possessions.map((possession) =>
-      possession.getValeurApresAmortissement(date)
-    );
-
-    const results = values.reduce(
-      (previousValue, currentValue) => previousValue + currentValue,
-      0
-    );
-
-    console.log('Calculated patrimoine value:', results);
-    setPatrimoineValue(results);
-
-    const updatedArrayResult = possessions.map((possession) =>
-      possession.getValeurApresAmortissement(date)
-    );
-    console.log('Updated arrayResult:', updatedArrayResult);
-    setArrayResult(updatedArrayResult);
+    calculatePatrimoineValue(date);
   }
 
   function handleEdit(index) {
@@ -109,44 +127,61 @@ function Possession() {
 
   function handleSave(index) {
     const updatedPossessions = [...possessions];
-    updatedPossessions[index] = {
-      ...updatedPossessions[index],
-      libelle: editValues.libelle,
-      valeur: editValues.valeur,
-      tauxAmortissement: editValues.tauxAmortissement,
-      dateDebut: new Date(editValues.dateDebut), 
-    };
+    updatedPossessions[index] = new Possession(
+      updatedPossessions[index].possesseur,
+      editValues.libelle,
+      parseFloat(editValues.valeur),
+      new Date(editValues.dateDebut),
+      updatedPossessions[index].dateFin,
+      parseFloat(editValues.tauxAmortissement)
+    );
     setPossessions(updatedPossessions);
     setEditIndex(null);
+
+    // Recalcule la valeur du patrimoine après mise à jour
+    if (datePicker) {
+      const date = new Date(datePicker);
+      calculatePatrimoineValue(date);
+    }
+    console.log('Possessions after save:', updatedPossessions);
   }
 
   function handleChange(e, field) {
     setEditValues({ ...editValues, [field]: e.target.value });
+    console.log(`Updated ${field}:`, e.target.value);
   }
 
   function handleClose(index) {
     const updatedPossessions = [...possessions];
-    updatedPossessions[index].dateFin = new Date(); // Mettre à jour la date de fin avec la date actuelle
+    updatedPossessions[index].dateFin = new Date();
     setPossessions(updatedPossessions);
+    // Recalcule la valeur du patrimoine après fermeture
+    if (datePicker) {
+      const date = new Date(datePicker);
+      calculatePatrimoineValue(date);
+    }
+    console.log('Possessions after close:', updatedPossessions);
   }
 
-  // Fonction pour ajouter une nouvelle possession
   function handleAddPossession() {
-    const newPossession = new PossessionModel(
+    const newPossession = new Possession(
       "Nouveau Possesseur",
       "Nouveau Libellé",
       0, 
       new Date(), 
       null, 
-      0 // Taux d'amortissement par défaut
+      0 
     );
     setPossessions([...possessions, newPossession]);
+    // Recalcule la valeur du patrimoine après ajout
+    if (datePicker) {
+      const date = new Date(datePicker);
+      calculatePatrimoineValue(date);
+    }
+    console.log('Possessions after add:', [...possessions, newPossession]);
   }
 
   function ShowList({ possessions, arrayResult }) {
-    console.log('ShowList - Possessions:', possessions);
-    console.log('ShowList - ArrayResult:', arrayResult);
-
     return (
       <tbody>
         {possessions.map((possession, i) => (
@@ -234,7 +269,7 @@ function Possession() {
         <button
           type="button"
           className="btn btn-secondary mb-3"
-          onClick={handleAddPossession} // Appelle la fonction pour ajouter une nouvelle possession
+          onClick={handleAddPossession}
         >
           Ajouter Nouvelle Possession
         </button>
@@ -249,34 +284,29 @@ function Possession() {
               <th scope="header">Date de fin</th>
               <th scope="header">Amortissement</th>
               <th scope="header">Valeur actuelle</th>
-              <th scope="header">Actions</th>
+              <th scope="header">Action</th>
             </tr>
           </thead>
           <ShowList possessions={possessions} arrayResult={arrayResult} />
         </table>
       </main>
-      <footer className="inputContainer d-flex justify-content-between align-items-center p-3 border-top">
-        <div className="input-group mb-3">
-          <span className="input-text">DatePICKER</span>
-          <input
-            type="date"
-            className="form"
-            onChange={getDatePicker}
-          />
-        </div>
+      <footer className="text-center py-3 border-top">
+        <input
+          type="date"
+          value={datePicker}
+          onChange={getDatePicker}
+        />
         <button
           type="button"
-          className="btn btn-primary"
+          className="btn btn-primary ms-2"
           onClick={getNewValue}
         >
-          VALIDER
+          Recalculate Patrimoine
         </button>
-        <div className="results">
-          VALEUR DU PATRIMOINE : {patrimoineValue} MDG
-        </div>
+        <p>Valeur totale du patrimoine: {patrimoineValue.toFixed(2)}</p>
       </footer>
     </div>
   );
 }
 
-export default Possession;
+export default Possessions;
