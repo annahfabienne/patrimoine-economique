@@ -191,21 +191,21 @@ function Possessions() {
                 <td>
                   <input
                     type="text"
-                    value={editValues.libelle}
+                    value={possession.libelle}
                     onChange={(e) => handleChange(e, 'libelle')}
                   />
                 </td>
                 <td>
                   <input
                     type="number"
-                    value={editValues.valeur}
+                    value={possession.valeurConstante ? possession.valeurConstante : possession.valeur}
                     onChange={(e) => handleChange(e, 'valeur')}
                   />
                 </td>
                 <td>
                   <input
                     type="date"
-                    value={editValues.dateDebut} 
+                    value={possession.dateDebut} 
                     onChange={(e) => handleChange(e, 'dateDebut')}
                   />
                 </td>
@@ -213,7 +213,9 @@ function Possessions() {
             ) : (
               <>
                 <td>{possession.libelle}</td>
-                <td>{possession.valeur}</td>
+                <td>{possession.valeurConstante ? possession.valeurConstante : possession.valeur}</td>
+                
+
                 <td>{possession.dateDebut.toDateString()}</td>
               </>
             )}
