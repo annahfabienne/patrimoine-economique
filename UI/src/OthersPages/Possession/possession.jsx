@@ -18,12 +18,12 @@ function Possessions() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('/data.json');
+        const response = await axios.get('https://backend-patrimoine-hrj6.onrender.com/api/possession'); // URL du backend sur Render
         const data = response.data;
         console.log('Data loaded:', data);
 
-        if (data && data[1] && Array.isArray(data[1].data.possessions)) {
-          instancing(data[1].data.possessions);
+        if (data && Array.isArray(data)) {
+          instancing(data);
         } else {
           console.error('Data format issue:', data);
         }
@@ -265,17 +265,18 @@ function Possessions() {
         <div className="text-center mt-4">
           <input
             type="date"
-            value={datePicker}
             onChange={getDatePicker}
           />
           <button
             type="button"
-            className="btn btn-primary mx-2"
+            className="btn btn-primary mt-2"
             onClick={getNewValue}
           >
-            calcul Patrimoine
+            Recalculate Patrimoine
           </button>
-          <p className="mt-2">Valeur Totale du Patrimoine: {patrimoineValue.toFixed(2)}MDG</p>
+          <div className="mt-3">
+            <h4>Total Patrimoine Value: {patrimoineValue}</h4>
+          </div>
         </div>
       </main>
     </div>
