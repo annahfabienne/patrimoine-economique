@@ -3,7 +3,7 @@ import './App.css';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import PatrimoinePage from './OthersPages/Patrimoine/Patrimoine.jsx';
 import PossessionPage from './OthersPages/Possession/possession.jsx';
-import NewPossession from './OthersPages/NewPossession.jsx';
+
 
 function App() {
   return (
