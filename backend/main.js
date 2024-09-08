@@ -3,7 +3,7 @@ import cors from 'cors';
 import { readFile as fetchFile } from '../data/index.js';
 
 const app = express();
-const PORT = 3500;
+const PORT = process.env.PORT || 3500; 
 
 app.use(cors());
 app.use(express.json());
@@ -39,7 +39,7 @@ app.post('/api/possession', async (req, res) => {
   try {
     const jsonData = await fetchFile('../UI/public/data.json');
     jsonData.data[1].data.possessions.push({ libelle, valeur, dateDebut, taux });
-    
+
     res.status(201).json({ libelle, valeur, dateDebut, taux });
   } catch (err) {
     res.status(500).json({ message: 'Erreur lors de l\'ajout de la possession' });
