@@ -4,7 +4,6 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import PatrimoinePage from './OthersPages/Patrimoine/patrimoine.jsx';
 import PossessionPage from './OthersPages/Possession/possession.jsx';
 
-
 function App() {
   return (
     <Router>
